@@ -28,37 +28,39 @@ impl Rotation {
 #[derive(Debug)]
 struct Dial {
     position: i64,
-    zero_counter: u64,
+    zero_crossings: u64,
 }
 
 impl Default for Dial {
     fn default() -> Self {
         Self {
             position: 50,
-            zero_counter: 0,
+            zero_crossings: 0,
         }
     }
 }
 
 impl Dial {
     fn rotate_by(self, rotation: &Rotation) -> Self {
-        let (position, zero_counter) = match rotation {
+        let zero_crossings = match rotation {
+            Rotation::Right { turns } => (self.position + turns).div_euclid(100),
             Rotation::Left { turns } => {
-                let position = (self.position - turns).rem_euclid(100);
-                let zero_counter =
-                    self.zero_counter + (self.position - turns).div_euclid(100).unsigned_abs();
-                (position, zero_counter)
-            }
-            Rotation::Right { turns } => {
-                let position = (self.position + turns).rem_euclid(100);
-                let zero_counter =
-                    self.zero_counter + (self.position + turns).div_euclid(100).unsigned_abs();
-                (position, zero_counter)
+                if self.position == 0 {
+                    turns.div_euclid(100)
+                } else {
+                    -(self.position - turns - 1).div_euclid(100)
+                }
             }
         };
+
+        let new_position = match rotation {
+            Rotation::Right { turns } => (self.position + turns).rem_euclid(100),
+            Rotation::Left { turns } => (self.position - turns).rem_euclid(100),
+        };
+
         Self {
-            position,
-            zero_counter,
+            position: new_position,
+            zero_crossings: self.zero_crossings + zero_crossings.unsigned_abs(),
         }
     }
 }
@@ -86,7 +88,7 @@ pub fn part_two(input: &str) -> Option<u64> {
     let final_position = rotations
         .iter()
         .fold(Dial::default(), |pos, rot| pos.rotate_by(rot));
-    Some(final_position.zero_counter)
+    Some(final_position.zero_crossings)
 }
 
 #[cfg(test)]
@@ -107,15 +109,15 @@ mod tests {
 
     #[test]
     fn test_part_two_correctly_double_counting_when_landing_on_zero_after_left_rotation() {
-        let data = "L150";
-        let result = part_two(data);
-        assert_eq!(result, Some(2));
+        let data = ["L50", "L50", "L100", "L150"].join("\n");
+        let result = part_two(&data);
+        assert_eq!(result, Some(4));
     }
 
     #[test]
     fn test_part_two_correctly_double_counting_when_landing_on_zero_after_right_rotation() {
-        let data = "R150";
-        let result = part_two(data);
-        assert_eq!(result, Some(2));
+        let data = ["R50", "R50", "R100", "R150"].join("\n");
+        let result = part_two(&data);
+        assert_eq!(result, Some(4));
     }
 }
