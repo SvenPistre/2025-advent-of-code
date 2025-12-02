@@ -2,8 +2,8 @@ advent_of_code::solution!(1);
 
 #[derive(Debug)]
 enum Rotation {
-    Left { turns: i32 },
-    Right { turns: i32 },
+    Left { turns: i64 },
+    Right { turns: i64 },
 }
 
 impl Rotation {
@@ -27,7 +27,7 @@ impl Rotation {
 
 #[derive(Debug)]
 struct Dial {
-    position: i32,
+    position: i64,
     zero_counter: u64,
 }
 
@@ -42,18 +42,23 @@ impl Default for Dial {
 
 impl Dial {
     fn rotate_by(self, rotation: &Rotation) -> Self {
-        match rotation {
-            Rotation::Left { turns } => Self {
-                position: (self.position - turns).rem_euclid(100),
-                zero_counter: self.zero_counter
-                    + (self.position - turns).div_euclid(100).unsigned_abs() as u64,
-            },
-
-            Rotation::Right { turns } => Self {
-                position: (self.position + turns).rem_euclid(100),
-                zero_counter: self.zero_counter
-                    + (self.position + turns).div_euclid(100).unsigned_abs() as u64,
-            },
+        let (position, zero_counter) = match rotation {
+            Rotation::Left { turns } => {
+                let position = (self.position - turns).rem_euclid(100);
+                let zero_counter =
+                    self.zero_counter + (self.position - turns).div_euclid(100).unsigned_abs();
+                (position, zero_counter)
+            }
+            Rotation::Right { turns } => {
+                let position = (self.position + turns).rem_euclid(100);
+                let zero_counter =
+                    self.zero_counter + (self.position + turns).div_euclid(100).unsigned_abs();
+                (position, zero_counter)
+            }
+        };
+        Self {
+            position,
+            zero_counter,
         }
     }
 }
