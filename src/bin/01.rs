@@ -26,21 +26,35 @@ impl Rotation {
 }
 
 #[derive(Debug)]
-struct Dial(i32);
+struct Dial {
+    position: i32,
+    zero_counter: u64,
+}
 
 impl Default for Dial {
     fn default() -> Self {
-        Self(50)
+        Self {
+            position: 50,
+            zero_counter: 0,
+        }
     }
 }
 
 impl Dial {
-    fn rotate_by(&mut self, rotation: &Rotation) -> Self {
+    fn rotate_by(self, rotation: &Rotation) -> Self {
         match rotation {
-            Rotation::Left { turns } => self.0 = (self.0 - turns).rem_euclid(100),
-            Rotation::Right { turns } => self.0 = (self.0 + turns).rem_euclid(100),
-        };
-        Self(self.0)
+            Rotation::Left { turns } => Self {
+                position: (self.position - turns).rem_euclid(100),
+                zero_counter: self.zero_counter
+                    + (self.position - turns).div_euclid(100).unsigned_abs() as u64,
+            },
+
+            Rotation::Right { turns } => Self {
+                position: (self.position + turns).rem_euclid(100),
+                zero_counter: self.zero_counter
+                    + (self.position + turns).div_euclid(100).unsigned_abs() as u64,
+            },
+        }
     }
 }
 
@@ -48,8 +62,8 @@ fn count_zero_positions(initial_position: Dial, rotations: Vec<Rotation>) -> u64
     let mut current_position = initial_position;
     let mut zero_position_counter = 0;
     for rotation in rotations {
-        current_position.rotate_by(&rotation);
-        if current_position.0 == 0 {
+        current_position = current_position.rotate_by(&rotation);
+        if current_position.position == 0 {
             zero_position_counter += 1;
         }
     }
@@ -62,8 +76,12 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(zero_position_counter)
 }
 
-pub fn part_two(_input: &str) -> Option<u64> {
-    None
+pub fn part_two(input: &str) -> Option<u64> {
+    let rotations: Vec<Rotation> = input.lines().filter_map(Rotation::parse).collect();
+    let final_position = rotations
+        .iter()
+        .fold(Dial::default(), |pos, rot| pos.rotate_by(rot));
+    Some(final_position.zero_counter)
 }
 
 #[cfg(test)]
@@ -79,6 +97,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(6));
     }
 }
