@@ -104,4 +104,18 @@ mod tests {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
         assert_eq!(result, Some(6));
     }
+
+    #[test]
+    fn test_part_two_correctly_double_counting_when_landing_on_zero_after_left_rotation() {
+        let data = "L150";
+        let result = part_two(data);
+        assert_eq!(result, Some(2));
+    }
+
+    #[test]
+    fn test_part_two_correctly_double_counting_when_landing_on_zero_after_right_rotation() {
+        let data = "R150";
+        let result = part_two(data);
+        assert_eq!(result, Some(2));
+    }
 }
