@@ -59,15 +59,15 @@ impl Dial {
 }
 
 fn count_zero_positions(initial_position: Dial, rotations: Vec<Rotation>) -> u64 {
-    let mut current_position = initial_position;
-    let mut zero_position_counter = 0;
-    for rotation in rotations {
-        current_position = current_position.rotate_by(&rotation);
-        if current_position.position == 0 {
-            zero_position_counter += 1;
+    let mut zero_counter = 0;
+    rotations.iter().fold(initial_position, |pos, rot| {
+        let new_pos = pos.rotate_by(rot);
+        if new_pos.position == 0 {
+            zero_counter += 1;
         }
-    }
-    zero_position_counter
+        new_pos
+    });
+    zero_counter
 }
 
 pub fn part_one(input: &str) -> Option<u64> {
