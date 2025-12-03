@@ -1,7 +1,5 @@
 use std::error::Error;
 
-use itertools::Itertools;
-
 advent_of_code::solution!(3);
 
 #[derive(Debug)]
@@ -21,20 +19,29 @@ impl BatteryBank {
             .map(BatteryBank)
     }
 
-    fn max_joltage(&self, number_of_needed_batteries: usize) -> u64 {
-        self.0
-            .iter()
-            .combinations(number_of_needed_batteries)
-            .map(|combination| to_decimal(combination))
-            .max()
-            .expect("BatteryBank should have at least two batteries")
-    }
-}
+    fn max_joltage(&self, total_batteries: usize) -> u64 {
+        let mut max_joltage = 0;
+        let mut start = 0;
+        let length = self.0.len();
 
-fn to_decimal(digits: Vec<&u64>) -> u64 {
-    digits.iter().enumerate().fold(0, |acc, (i, &x)| {
-        acc + x * 10_u64.pow((digits.len() - i - 1) as u32)
-    })
+        for battery_pos in 0..total_batteries {
+            let end = length - (total_batteries - battery_pos) + 1;
+            let (max_digit_index, max_digit) = self.0[start..end]
+                .iter()
+                .enumerate()
+                .reduce(|current_max, item| {
+                    if item.1 > current_max.1 {
+                        item
+                    } else {
+                        current_max
+                    }
+                })
+                .unwrap();
+            start += max_digit_index + 1;
+            max_joltage = max_joltage * 10 + max_digit;
+        }
+        max_joltage
+    }
 }
 
 pub fn part_one(input: &str) -> Option<u64> {
@@ -46,8 +53,13 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(battery_banks.iter().map(|bank| bank.max_joltage(2)).sum())
 }
 
-pub fn part_two(_input: &str) -> Option<u64> {
-    None
+pub fn part_two(input: &str) -> Option<u64> {
+    let battery_banks: Vec<BatteryBank> = input
+        .lines()
+        .map(BatteryBank::parse)
+        .map(Result::unwrap)
+        .collect();
+    Some(battery_banks.iter().map(|bank| bank.max_joltage(12)).sum())
 }
 
 #[cfg(test)]
@@ -63,7 +75,7 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(3121910778619));
     }
 
     #[test]
@@ -107,5 +119,34 @@ mod tests {
         let battery_bank = BatteryBank::parse("129199").unwrap();
         assert_eq!(battery_bank.max_joltage(2), 99);
     }
+
+    #[test]
+    fn test_max_joltage_for_two_batteries() {
+        let battery_banks: Vec<(BatteryBank, u64)> = vec![
+            (BatteryBank::parse("987654321111111").unwrap(), 98),
+            (BatteryBank::parse("811111111111119").unwrap(), 89),
+            (BatteryBank::parse("234234234234278").unwrap(), 78),
+            (BatteryBank::parse("818181911112111").unwrap(), 92),
+        ];
+
+        battery_banks.iter().for_each(|(bank, expected)| {
+            let actual = bank.max_joltage(2);
+            assert_eq!(actual, *expected);
+        });
+    }
+
+    #[test]
+    fn test_max_joltage_for_twelve_batteries() {
+        let battery_banks: Vec<(BatteryBank, u64)> = vec![
+            (BatteryBank::parse("987654321111111").unwrap(), 987654321111),
+            (BatteryBank::parse("811111111111119").unwrap(), 811111111119),
+            (BatteryBank::parse("234234234234278").unwrap(), 434234234278),
+            (BatteryBank::parse("818181911112111").unwrap(), 888911112111),
+        ];
+
+        battery_banks.iter().for_each(|(bank, expected)| {
+            let actual = bank.max_joltage(12);
+            assert_eq!(actual, *expected);
+        });
     }
 }
