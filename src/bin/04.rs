@@ -102,34 +102,45 @@ impl Display for Grid {
     }
 }
 
-pub fn part_one(input: &str) -> Option<u64> {
-    let original_grid = Grid::parse(input).unwrap();
-    let mut updated_grid = original_grid.clone();
+fn mark_removable_rolls(grid: &Grid) -> (Grid, u32) {
+    let mut updated_grid = grid.clone();
+    let mut amount_of_removable_rolls = 0;
     let max_neighbours = 4;
-    let mut accessible_tiles = 0;
 
-    for x in 0..original_grid.width() {
-        for y in 0..original_grid.height() {
-            match original_grid.0[x][y].state {
-                TileState::Occupied => (),
-                TileState::Free | TileState::Accessible => continue,
-            }
-            let amount_of_neighbours = original_grid
-                .get_neighbours(x, y)
-                .into_iter()
-                .filter(|&tile| tile.state == TileState::Occupied)
-                .count();
-            if amount_of_neighbours < max_neighbours {
-                accessible_tiles += 1;
-                updated_grid.0[x][y].state = TileState::Accessible;
+    for x in 0..grid.width() {
+        for y in 0..grid.height() {
+            if grid.0[x][y].state == TileState::Occupied {
+                let occupied_neighbours = grid
+                    .get_neighbours(x, y)
+                    .into_iter()
+                    .filter(|&tile| tile.state == TileState::Occupied)
+                    .count();
+
+                if occupied_neighbours < max_neighbours {
+                    updated_grid.0[x][y].state = TileState::Accessible;
+                    amount_of_removable_rolls += 1;
+                }
             }
         }
     }
-    Some(accessible_tiles)
+    (updated_grid, amount_of_removable_rolls)
 }
 
-pub fn part_two(_input: &str) -> Option<u64> {
-    None
+pub fn part_one(input: &str) -> Option<u64> {
+    let original_grid = Grid::parse(input).unwrap();
+    let (_, removable_rolls) = mark_removable_rolls(&original_grid);
+    Some(removable_rolls.into())
+}
+
+pub fn part_two(input: &str) -> Option<u64> {
+    let (mut grid, mut removable_rolls) = mark_removable_rolls(&Grid::parse(input).unwrap());
+    let mut total_removable_rolls = removable_rolls;
+
+    while removable_rolls > 0 {
+        (grid, removable_rolls) = mark_removable_rolls(&grid);
+        total_removable_rolls += removable_rolls;
+    }
+    Some(total_removable_rolls.into())
 }
 
 #[cfg(test)]
@@ -145,6 +156,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(43));
     }
 }
