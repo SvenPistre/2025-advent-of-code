@@ -24,6 +24,7 @@ dependencies = [
  "chrono",
  "dhat",
  "pico-args",
+ "rangetools",
  "tinyjson",
 ]
 
@@ -293,6 +294,12 @@ checksum = "5267fca4496028628a95160fc423a33e8b2e6af8a5302579e322e4b520293cae"
 dependencies = [
  "proc-macro2",
 ]
+
+[[package]]
+name = "rangetools"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6e97ca3dbabd81e6033cfe09f0cef37c89f34f2a9223cab7cf99305d46a9633"
 
 [[package]]
 name = "redox_syscall"
