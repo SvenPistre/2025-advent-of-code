@@ -70,8 +70,14 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(fresh_ingredients)
 }
 
-pub fn part_two(_input: &str) -> Option<u64> {
-    None
+pub fn part_two(input: &str) -> Option<u64> {
+    let (ranges, _) = parse_input(input).unwrap();
+    let combined_range = ranges
+        .iter()
+        .fold(ranges[0].0.clone().to_set(), |acc, range| {
+            acc.union(range.0.clone())
+        });
+    Some(combined_range.into_iter().count() as u64)
 }
 
 #[cfg(test)]
@@ -87,6 +93,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(14));
     }
 }
